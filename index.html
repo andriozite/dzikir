@@ -426,7 +426,7 @@
                             
                             <div class="w-full sm:w-auto flex gap-2">
                                 <!-- Reset Button Per Item -->
-                                <button onclick="resetCounter('${item.id}', '${item.title}')" 
+                                <button onclick="resetCounter('${item.id}')" 
                                     class="p-3 rounded-xl border transition-colors ${resetBtnClass}"
                                     title="Ulangi Dzikir Ini">
                                     <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
@@ -467,7 +467,7 @@
             }
         }
 
-        function resetCounter(id, title) {
+        function resetCounter(id) {
             const item = dzikirData.find(d => d.id === id);
             if (item) {
                 progress[id] = item.count;
