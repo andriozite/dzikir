@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dzikir Pagi & Petang</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Amiri for Arabic, Inter for UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        arabic: ['Amiri', 'serif'],
+                    },
+                    colors: {
+                        morning: {
+                            bg: '#FDFBF7',
+                            card: '#FFFFFF',
+                            accent: '#F59E0B', // Amber
+                            text: '#1F2937'
+                        },
+                        evening: {
+                            bg: '#1E293B', // Slate 800
+                            card: '#334155', // Slate 700
+                            accent: '#818CF8', // Indigo
+                            text: '#F1F5F9'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .arabic-text {
+            direction: rtl;
+            line-height: 2.2;
+        }
+        /* Smooth transition for theme switching */
+        body, .card-bg, .btn-theme {
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+    </style>
+</head>
+<body id="body" class="bg-morning-bg text-morning-text min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 backdrop-blur-md bg-opacity-90 border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-500" id="header">
+        <div class="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <!-- Reset All Button -->
+                <button onclick="confirmResetAll()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-gray-500 dark:text-gray-400" title="Reset Semua">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                </button>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">Dzikir Harian</h1>
+                    <p class="text-xs opacity-80">Sesuai Tuntunan Sunnah</p>
+                </div>
+            </div>
+            
+            <!-- Toggle Switch -->
+            <button onclick="toggleMode()" id="themeBtn" class="flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all shadow-sm ring-1 ring-inset">
+                <span id="modeIcon"></span>
+                <span id="modeText">Pagi</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="fixed top-[73px] left-0 h-1 bg-gray-200 w-full z-40">
+        <div id="progressBar" class="h-full bg-green-500 transition-all duration-300 w-0"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-2xl mx-auto px-4 py-6 w-full space-y-6" id="content-container">
+        <!-- Content will be injected here via JS -->
+    </main>
+
+    <!-- Completion Modal (Hidden by default) -->
+    <div id="completionModal" class="fixed inset-0 bg-black/50 z-[60] hidden flex items-center justify-center px-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl max-w-sm w-full text-center transform scale-95 transition-transform">
+            <div class="mx-auto bg-green-100 text-green-600 rounded-full p-3 w-16 h-16 flex items-center justify-center mb-4">
+                <i data-lucide="check" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Alhamdulillah!</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-6 text-sm">Anda telah menyelesaikan rangkaian dzikir ini. Semoga Allah menerima amal ibadah kita.</p>
+            <button onclick="closeModal()" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 rounded-lg transition-colors">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- Credit Modal (Hidden by default) -->
+    <div id="creditModal" onclick="closeCreditModal(event)" class="fixed inset-0 bg-black/60 z-[70] hidden flex items-center justify-center px-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center transform scale-90 transition-transform duration-300 relative border-t-4 border-amber-500">
+            <button onclick="closeCreditModal(null)" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="mb-4">
+                <span class="inline-block p-3 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-500">
+                    <i data-lucide="heart-handshake" class="w-8 h-8"></i>
+                </span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Dibuat Oleh</h3>
+            <p class="text-gray-800 dark:text-gray-200 font-semibold text-lg leading-relaxed mb-2">
+                Andrian
+            </p>
+            <p class="text-gray-600 dark:text-gray-400 italic font-serif text-sm leading-relaxed">
+                "Hamba Allah yang penuh dosa"
+            </p>
+            <div class="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700">
+                <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    Semoga Allah mengampuni dosa saya dan keluarga, serta memberikan rezeki yang berlimpah. Aamiin.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-8 text-center space-y-3 pb-12">
+        <p class="text-sm opacity-60">Dibangun untuk kemudahan ibadah.</p>
+        <button onclick="openCreditModal()" class="text-xs font-medium text-amber-600 dark:text-indigo-400 hover:underline flex items-center justify-center gap-1 mx-auto opacity-80 hover:opacity-100 transition-opacity">
+            <span>Tentang Pembuat</span>
+        </button>
+    </footer>
+
+    <script>
+        // --- Data Dzikir (Core Adhkar) ---
+        
+        const dzikirCommon = [
+            {
+                id: "c1",
+                title: "Membaca Ta'awudz",
+                arabic: "أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ",
+                latin: "A'udzu billahi minasy-syaithonir-rojim",
+                translation: "Aku berlindung kepada Allah dari godaan syaitan yang terkutuk.",
+                count: 1,
+                ref: "QS. Al-A'raf: 200",
+                note: "Dibaca sebelum memulai dzikir."
+            },
+            {
+                id: "c2",
+                title: "Ayat Kursi",
+                arabic: "اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ وَلَا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ",
+                latin: "Allahu laa ilaaha illaa huwal hayyul qoyyuum...",
+                translation: "Allah, tidak ada Tuhan (yang berhak disembah) melainkan Dia Yang Hidup kekal lagi terus menerus mengurus (makhluk-Nya)...",
+                count: 1,
+                ref: "HR. An-Nasa-i (Shahih)",
+                note: "Siapa yang membacanya di pagi hari, akan dilindungi dari jin hingga sore, dan sebaliknya."
+            },
+            {
+                id: "c3",
+                title: "Surah Al-Ikhlas",
+                arabic: "قُلْ هُوَ ٱللَّهُ أَحَدٌ ۞ ٱللَّهُ ٱلصَّمَدُ ۞ لَمْ يَلِدْ وَلَمْ يُولَدْ ۞ وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌۢ",
+                latin: "Qul huwallahu ahad...",
+                translation: "Katakanlah: Dialah Allah, Yang Maha Esa...",
+                count: 3,
+                ref: "HR. Abu Daud & Tirmidzi",
+                note: "Membaca Al-Ikhlas, Al-Falaq, dan An-Nas sebanyak 3x pagi dan petang."
+            },
+            {
+                id: "c4",
+                title: "Surah Al-Falaq",
+                arabic: "قُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ ۞ مِن شَرِّ مَا خَلَقَ ۞ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ ۞ وَمِن شَرِّ ٱلنَّفَّٰثَٰتِ فِى ٱلْعُقَدِ ۞ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ",
+                latin: "Qul a'udzu bi rabbil-falaq...",
+                translation: "Katakanlah: Aku berlindung kepada Tuhan yang menguasai subuh...",
+                count: 3,
+                ref: "HR. Abu Daud & Tirmidzi",
+                note: ""
+            },
+            {
+                id: "c5",
+                title: "Surah An-Nas",
+                arabic: "قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ ۞ مَلِكِ ٱلنَّاسِ ۞ إِلَٰهِ ٱلنَّاسِ ۞ مِن شَرِّ ٱلْوَسْوَاسِ ٱلْخَنَّاسِ ۞ ٱلَّذِى يُوَسْوِسُ فِى صُدُورِ ٱلنَّاسِ ۞ مِنَ ٱلْجِنَّةِ وَٱلنَّاسِ",
+                latin: "Qul a'udzu bi rabbin-naas...",
+                translation: "Katakanlah: Aku berlindung kepada Tuhan (yang memelihara dan menguasai) manusia...",
+                count: 3,
+                ref: "HR. Abu Daud & Tirmidzi",
+                note: ""
+            },
+            {
+                id: "c6",
+                title: "Sayyidul Istighfar",
+                arabic: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ خَلَقْتَنِي وَأَنَا عَبْدُكَ وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ وَأَبُوءُ لَكَ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",
+                latin: "Allahumma anta rabbii laa ilaaha illaa anta khalaqtanii...",
+                translation: "Ya Allah, Engkau adalah Rabbku, tidak ada Tuhan yang berhak disembah kecuali Engkau...",
+                count: 1,
+                ref: "HR. Bukhari",
+                note: "Penghulu segala istighfar. Barangsiapa membacanya dengan yakin lalu meninggal, maka ia masuk surga."
+            },
+             {
+                id: "c7",
+                title: "Istighfar Harian",
+                arabic: "أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ",
+                latin: "Astaghfirullaha wa atuubu ilaih.",
+                translation: "Aku memohon ampun kepada Allah dan bertaubat kepada-Nya.",
+                count: 100,
+                ref: "HR. Bukhari & Muslim",
+                note: "Dibaca 100x dalam sehari."
+            }
+        ];
+
+        const dzikirMorningSpecific = [
+            {
+                id: "m1",
+                title: "Doa Pagi Hari",
+                arabic: "اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ",
+                latin: "Allahumma bika ashbahna, wa bika amsayna, wa bika nahya, wa bika namuutu, wa ilaykan-nusyuur.",
+                translation: "Ya Allah, dengan rahmat dan pertolongan-Mu kami memasuki waktu pagi, dan dengan rahmat-Mu kami memasuki waktu sore...",
+                count: 1,
+                ref: "HR. Tirmidzi",
+                note: ""
+            },
+            {
+                id: "m2",
+                title: "Ridho Allah sebagai Rabb",
+                arabic: "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا",
+                latin: "Rodhiitu billahi robba, wa bil-islaami diina, wa bi-muhammadin shallallahu 'alaihi wa sallama nabiyya.",
+                translation: "Aku ridho Allah sebagai Rabb, Islam sebagai agama, dan Muhammad shallallahu 'alaihi wa sallam sebagai nabi.",
+                count: 3,
+                ref: "HR. Abu Daud & Tirmidzi",
+                note: "Dibaca 3x. Barangsiapa membacanya, wajib bagi Allah untuk meridhainya."
+            },
+            {
+                id: "m3",
+                title: "Tasbih & Tahmid",
+                arabic: "سُبْحَانَ اللهِ وَبِحَمْدِهِ",
+                latin: "Subhanallah wa bi-hamdih.",
+                translation: "Maha Suci Allah dengan segala puji bagi-Nya.",
+                count: 100,
+                ref: "HR. Muslim",
+                note: "Dibaca 100x. Tidak ada seorangpun yang membawa amal lebih baik di hari kiamat daripada orang yang membaca ini, kecuali yang membaca semisal atau lebih banyak."
+            }
+        ];
+
+        const dzikirEveningSpecific = [
+            {
+                id: "e1",
+                title: "Doa Petang Hari",
+                arabic: "اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ",
+                latin: "Allahumma bika amsayna, wa bika ashbahna, wa bika nahya, wa bika namuutu, wa ilaykal-mashiir.",
+                translation: "Ya Allah, dengan rahmat dan pertolongan-Mu kami memasuki waktu sore, dan dengan rahmat-Mu kami memasuki waktu pagi...",
+                count: 1,
+                ref: "HR. Tirmidzi",
+                note: ""
+            },
+            {
+                id: "e2",
+                title: "Ridho Allah sebagai Rabb",
+                arabic: "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا",
+                latin: "Rodhiitu billahi robba, wa bil-islaami diina, wa bi-muhammadin shallallahu 'alaihi wa sallama nabiyya.",
+                translation: "Aku ridho Allah sebagai Rabb, Islam sebagai agama, dan Muhammad shallallahu 'alaihi wa sallam sebagai nabi.",
+                count: 3,
+                ref: "HR. Abu Daud & Tirmidzi",
+                note: "Dibaca 3x di sore hari."
+            },
+            {
+                id: "e3",
+                title: "Mohon Perlindungan dari Kejahatan Malam",
+                arabic: "أَعُوذُ بِكَلِمَاتِ اللهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
+                latin: "A'udzu bi-kalimaatillahit-taammaati min syarri maa kholaq.",
+                translation: "Aku berlindung dengan kalimat-kalimat Allah yang sempurna dari kejahatan makhluk yang diciptakan-Nya.",
+                count: 3,
+                ref: "HR. Muslim",
+                note: "Dibaca 3x. Siapa yang membacanya di sore hari, tidak akan disengat binatang berbisa pada malam itu."
+            }
+        ];
+
+        // --- Doa Penutup (Added) ---
+        const dzikirClosing = [
+            {
+                id: "close1",
+                title: "Doa Penutup (Kaffaratul Majelis)",
+                arabic: "سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ، أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا أَنْتَ، أَسْتَغْفِرُكَ وَأَتُوبُ إِلَيْكَ",
+                latin: "Subhanakallahumma wa bihamdika, asyhadu alla ilaha illa anta, astaghfiruka wa atuubu ilaik.",
+                translation: "Maha Suci Engkau Ya Allah dan segala puji bagi-Mu, aku bersaksi bahwa tiada Tuhan selain Engkau, aku mohon ampun dan bertaubat kepada-Mu.",
+                count: 1,
+                ref: "HR. Tirmidzi",
+                note: "Dibaca sebagai penutup rangkaian dzikir agar dosa-dosa terhapus."
+            }
+        ];
+
+        // --- State Management ---
+        let currentMode = 'pagi'; // 'pagi' or 'petang'
+        let dzikirData = [];
+        let progress = {};
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            
+            // Determine initial mode based on actual time
+            const hour = new Date().getHours();
+            if (hour >= 15 || hour < 4) {
+                currentMode = 'petang';
+            } else {
+                currentMode = 'pagi';
+            }
+            
+            updateTheme();
+            loadDzikir();
+        });
+
+        // --- Functions ---
+
+        function toggleMode() {
+            currentMode = currentMode === 'pagi' ? 'petang' : 'pagi';
+            updateTheme();
+            loadDzikir();
+        }
+
+        function updateTheme() {
+            const body = document.getElementById('body');
+            const header = document.getElementById('header');
+            const btn = document.getElementById('themeBtn');
+            const iconSpan = document.getElementById('modeIcon');
+            const textSpan = document.getElementById('modeText');
+
+            if (currentMode === 'pagi') {
+                // UI Styles
+                body.className = "bg-morning-bg text-morning-text min-h-screen flex flex-col transition-colors duration-500";
+                header.className = "sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-gray-200 shadow-sm transition-colors duration-500";
+                btn.className = "flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all shadow-sm ring-1 ring-inset ring-morning-accent text-amber-700 bg-amber-50 hover:bg-amber-100";
+                
+                // Icon
+                iconSpan.innerHTML = '<i data-lucide="sun" class="w-4 h-4"></i>';
+                textSpan.innerText = "Mode Pagi";
+
+            } else {
+                // UI Styles
+                body.className = "bg-evening-bg text-evening-text min-h-screen flex flex-col transition-colors duration-500";
+                header.className = "sticky top-0 z-50 backdrop-blur-md bg-slate-900/80 border-b border-slate-700 shadow-sm transition-colors duration-500";
+                btn.className = "flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all shadow-sm ring-1 ring-inset ring-evening-accent text-indigo-300 bg-slate-800 hover:bg-slate-700";
+                
+                // Icon
+                iconSpan.innerHTML = '<i data-lucide="moon" class="w-4 h-4"></i>';
+                textSpan.innerText = "Mode Petang";
+            }
+            
+            // Re-init icons for the new HTML injected
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        function loadDzikir() {
+            const specific = currentMode === 'pagi' ? dzikirMorningSpecific : dzikirEveningSpecific;
+            
+            // Append Closing prayer at the END of the list
+            dzikirData = [...dzikirCommon, ...specific, ...dzikirClosing];
+            
+            // Initialize progress if not exists in memory
+            dzikirData.forEach(item => {
+                if (progress[item.id] === undefined) {
+                    progress[item.id] = item.count; 
+                }
+            });
+
+            renderList();
+            updateProgressBar();
+        }
+
+        function renderList() {
+            const container = document.getElementById('content-container');
+            container.innerHTML = '';
+
+            dzikirData.forEach((item, index) => {
+                const isComplete = progress[item.id] === 0;
+                const remaining = progress[item.id];
+                const total = item.count;
+                
+                // Styles based on theme and completion
+                let cardClass = "";
+                let btnClass = "";
+                let resetBtnClass = "";
+                
+                if (currentMode === 'pagi') {
+                    cardClass = isComplete ? "bg-gray-100 border-gray-200 opacity-60" : "bg-white border-gray-200 shadow-sm";
+                    btnClass = isComplete 
+                        ? "bg-gray-300 text-gray-500 cursor-default" 
+                        : "bg-amber-100 text-amber-700 hover:bg-amber-200 active:scale-95";
+                    resetBtnClass = "border-gray-200 text-gray-400 hover:text-amber-600 hover:bg-gray-50";
+                } else {
+                    cardClass = isComplete ? "bg-slate-800 border-slate-700 opacity-60" : "bg-slate-700 border-slate-600 shadow-md";
+                    btnClass = isComplete 
+                        ? "bg-slate-800 text-slate-500 cursor-default" 
+                        : "bg-indigo-900/50 text-indigo-300 hover:bg-indigo-900/80 active:scale-95 border border-indigo-500/30";
+                    resetBtnClass = "border-slate-600 text-slate-400 hover:text-indigo-400 hover:bg-slate-600";
+                }
+
+                const html = `
+                    <div class="rounded-2xl border p-5 sm:p-6 relative overflow-hidden transition-all duration-300 ${cardClass}">
+                        ${isComplete ? `<div class="absolute top-4 right-4 text-green-500"><i data-lucide="check-circle-2" class="w-6 h-6"></i></div>` : ''}
+                        
+                        <div class="mb-4">
+                            <h2 class="text-sm font-semibold uppercase tracking-wide opacity-70 mb-1 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-gray-200 dark:bg-slate-600 flex items-center justify-center text-xs font-bold">${index + 1}</span>
+                                ${item.title}
+                            </h2>
+                        </div>
+
+                        <div class="mb-6 text-right">
+                            <p class="arabic-text font-arabic text-3xl sm:text-4xl leading-loose mb-4" lang="ar">${item.arabic}</p>
+                        </div>
+
+                        <div class="space-y-3 mb-6">
+                            <p class="text-sm italic opacity-80 leading-relaxed font-serif text-gray-500 dark:text-gray-400">${item.latin}</p>
+                            <p class="text-sm leading-relaxed">${item.translation}</p>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-100 dark:border-slate-600">
+                            <div class="text-xs opacity-60 flex items-center gap-1">
+                                <i data-lucide="book-open" class="w-3 h-3"></i>
+                                ${item.ref}
+                            </div>
+                            
+                            <div class="w-full sm:w-auto flex gap-2">
+                                <!-- Reset Button Per Item -->
+                                <button onclick="resetCounter('${item.id}', '${item.title}')" 
+                                    class="p-3 rounded-xl border transition-colors ${resetBtnClass}"
+                                    title="Ulangi Dzikir Ini">
+                                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                                </button>
+
+                                <!-- Main Count Button -->
+                                <button onclick="decrementCounter('${item.id}', ${total})" 
+                                    class="flex-grow sm:w-48 py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all select-none ${btnClass}"
+                                    ${isComplete ? 'disabled' : ''}>
+                                    ${isComplete 
+                                        ? '<span>Selesai</span>' 
+                                        : `<i data-lucide="fingerprint" class="w-5 h-5"></i>
+                                           <span>${remaining} / ${total}x</span>`
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                        
+                        ${item.note ? `
+                        <div class="mt-4 bg-gray-50 dark:bg-slate-800/50 p-3 rounded-lg text-xs opacity-70 flex gap-2 items-start">
+                            <i data-lucide="info" class="w-3 h-3 mt-0.5 flex-shrink-0"></i>
+                            <span>${item.note}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+            lucide.createIcons();
+        }
+
+        function decrementCounter(id, total) {
+            if (progress[id] > 0) {
+                progress[id]--;
+                renderList();
+                updateProgressBar();
+                if (navigator.vibrate) navigator.vibrate(50);
+            }
+        }
+
+        function resetCounter(id, title) {
+            const item = dzikirData.find(d => d.id === id);
+            if (item) {
+                progress[id] = item.count;
+                renderList();
+                updateProgressBar();
+            }
+        }
+
+        function confirmResetAll() {
+            if (confirm("Apakah Anda yakin ingin mereset semua hitungan dzikir untuk sesi ini?")) {
+                resetAll();
+            }
+        }
+
+        function resetAll() {
+            dzikirData.forEach(item => {
+                progress[item.id] = item.count;
+            });
+            renderList();
+            updateProgressBar();
+            document.getElementById('completionModal').classList.add('hidden');
+        }
+
+        function updateProgressBar() {
+            const totalCounts = dzikirData.reduce((acc, curr) => acc + curr.count, 0);
+            const currentRemaining = dzikirData.reduce((acc, curr) => acc + progress[curr.id], 0);
+            const completed = totalCounts - currentRemaining;
+            
+            const percentage = (completed / totalCounts) * 100;
+            document.getElementById('progressBar').style.width = percentage + '%';
+
+            if (percentage === 100) {
+                setTimeout(() => {
+                    showCompletionModal();
+                }, 500);
+            }
+        }
+
+        // --- Modals Logic ---
+        function showCompletionModal() {
+            document.getElementById('completionModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('completionModal').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openCreditModal() {
+            const modal = document.getElementById('creditModal');
+            modal.classList.remove('hidden');
+            // Small delay to allow display:block to apply before opacity transition
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                const content = modal.querySelector('div');
+                content.classList.remove('scale-90');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeCreditModal(e) {
+            // Close if clicked on overlay (e.target === modal) or if close button (e === null)
+            const modal = document.getElementById('creditModal');
+            if (e === null || e.target === modal) {
+                modal.classList.add('opacity-0');
+                const content = modal.querySelector('div');
+                content.classList.remove('scale-100');
+                content.classList.add('scale-90');
+                
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+    </script>
+</body>
+</html>
